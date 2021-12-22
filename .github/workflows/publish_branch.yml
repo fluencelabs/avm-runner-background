@@ -1,0 +1,46 @@
+name: "publish-branch"
+
+on:
+  workflow_dispatch
+
+defaults:
+    run:
+        working-directory: avm-runner-background
+
+jobs:
+  npm-publish:
+    name: "Publish"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get branch name
+        run: |
+          BRANCH=${GITHUB_REF#refs/*/}
+          SANITIZED=$(echo "$BRANCH" | sed -e 's/[^a-zA-Z0-9-]/-/g')
+          echo "BRANCH_NAME=$SANITIZED" >> $GITHUB_ENV
+      ### Set version
+      - name: Set version
+        run: npm version prerelease --no-git-tag-version --preid ${{ env.BRANCH_NAME }}-${{ github.run_number }}
+
+      ### Publish to NPM registry
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+          registry-url: 'https://registry.npmjs.org'
+
+      ### release AVM runner
+      - name: publish AVM runner
+        env: 
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm install
+          ./build_runner.sh
+          npm run build
+          npm publish --access public --tag=beta
+
