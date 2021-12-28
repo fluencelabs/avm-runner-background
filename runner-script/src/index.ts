@@ -26,7 +26,6 @@ let airInterpreter: AirInterpreter | null = null;
 
 const toExpose: RunnerScriptInterface = {
     init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
-        console.log('RUNNER: inside init function');
         let module: WebAssembly.Module;
         if (isBrowser || isWebWorker) {
             if (loadMethod.method !== 'fetch-from-url') {
@@ -65,15 +64,11 @@ const toExpose: RunnerScriptInterface = {
         } else {
             throw new Error('Environment not supported');
         }
-        console.log('RUNNER: creating interpreter');
         airInterpreter = await AirInterpreter.create(module, logLevel, logFunction);
-        console.log('RUNNER: created interpreter');
     },
 
     terminate: async () => {
-        console.log('RUNNER: terminating');
         airInterpreter = null;
-        console.log('RUNNER: terminated');
     },
 
     run: async (
@@ -86,7 +81,6 @@ const toExpose: RunnerScriptInterface = {
         },
         callResults: CallResultsArray,
     ): Promise<InterpreterResult> => {
-        console.log('RUNNER: running interpreter');
         if (airInterpreter === null) {
             throw new Error('Interpreter is not initialized');
         }
