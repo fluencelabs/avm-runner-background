@@ -1,13 +1,7 @@
 {
-    "name": "runner-tests",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
     "scripts": {
         "test": "jest --runInBand"
     },
-    "author": "",
-    "license": "ISC",
     "devDependencies": {
         "@types/jest": "^27.0.3",
         "@types/jest-environment-puppeteer": "^4.4.1",

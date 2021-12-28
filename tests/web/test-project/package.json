@@ -1,8 +1,4 @@
 {
-    "name": "my-webpack-project",
-    "version": "1.0.0",
-    "description": "My webpack project",
-    "main": "index.js",
     "scripts": {
         "start": "webpack serve",
         "postinstall": "copyAvm public",
@@ -13,8 +9,6 @@
         "watch": "webpack --watch",
         "serve": "webpack serve"
     },
-    "author": "",
-    "license": "ISC",
     "devDependencies": {
         "@webpack-cli/generators": "^2.4.1",
         "css-loader": "^6.5.1",

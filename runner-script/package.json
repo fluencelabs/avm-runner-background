@@ -1,14 +1,10 @@
 {
     "name": "runner-script",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
     "scripts": {
         "build:web": "webpack -c webpack.config.web.js",
         "build:node": "webpack -c webpack.config.node.js"
     },
-    "author": "",
-    "license": "ISC",
     "devDependencies": {
         "@types/node": "^17.0.0",
         "ts-loader": "^8.3.0",

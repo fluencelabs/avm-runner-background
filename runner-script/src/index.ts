@@ -41,8 +41,7 @@ const toExpose: RunnerScriptInterface = {
                 module = await WebAssembly.compileStreaming(fetch(url));
             } catch (e) {
                 throw new Error(
-                    'Failed to load avm.wasm. This usually means that the web server is not serving avm.wasm file. Original error: ' +
-                        e.toString(),
+                    `Failed to load ${fileName}. This usually means that the web server is not serving avm file correctly. Original error: ${e.toString()}`,
                 );
             }
         } else if (isNode) {
@@ -58,8 +57,9 @@ const toExpose: RunnerScriptInterface = {
                 module = await WebAssembly.compile(file);
             } catch (e) {
                 throw new Error(
-                    'Failed to load avm.wasm. Did you forget to install @fluencelabs/avm? Original error: ' +
-                        e.toString(),
+                    `Failed to load ${
+                        loadMethod.filePath
+                    }. Did you forget to install @fluencelabs/avm? Original error: ${e.toString()}`,
                 );
             }
         } else {
