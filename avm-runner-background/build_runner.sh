@@ -10,6 +10,6 @@ cd "$(dirname "$0")"
     npm run build:node
 )
 
-mkdir -p dist
-cp ../runner-script/dist/web.js dist/runnerScript.web.js
-cp ../runner-script/dist/node.js dist/runnerScript.node.js
+mkdir -p runner-scripts
+cp ../runner-script/dist/web.js runner-scripts/runnerScript.web.js
+cp ../runner-script/dist/node.js runner-scripts/runnerScript.node.js

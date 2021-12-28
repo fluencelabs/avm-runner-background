@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "tsc",
+        "postbuild": "cp -r runner-scripts/* dist",
         "test": "jest"
     },
     "author": "Fluence Labs",
