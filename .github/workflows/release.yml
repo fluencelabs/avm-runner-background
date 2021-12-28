@@ -5,10 +5,6 @@ on:
     tags:
       - "v*"
 
-defaults:
-    run:
-        working-directory: avm-runner-background
-
 jobs:
   npm-publish:
     name: "Publish"
@@ -16,6 +12,7 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: avm-runner-background
 
     steps:
       - name: Checkout repository
