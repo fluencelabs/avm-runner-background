@@ -22,6 +22,6 @@ fi
 
 cat << EOF > ./src/runnerBase64.ts
 // auto-generated
-export const web = "${web}"
-export const node = "${node}"
+export const webScript = "${web}"
+export const nodeScript = "${node}"
 EOF

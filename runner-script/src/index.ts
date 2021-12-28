@@ -24,8 +24,6 @@ const logFunction = (level: LogLevel, message: string) => {
 
 let airInterpreter: AirInterpreter | null = null;
 
-const defaultAvmFileName = 'avm.wasm';
-
 const toExpose: RunnerScriptInterface = {
     init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
         let module: WebAssembly.Module;
@@ -34,14 +32,15 @@ const toExpose: RunnerScriptInterface = {
                 throw new Error("Only 'fetch-from-url' is supported for browsers");
             }
 
-            const fileName = loadMethod.filePath || defaultAvmFileName;
-            const url = loadMethod.baseUrl + fileName;
+            const url = loadMethod.baseUrl + loadMethod.filePath;
 
             try {
                 module = await WebAssembly.compileStreaming(fetch(url));
             } catch (e) {
                 throw new Error(
-                    `Failed to load ${fileName}. This usually means that the web server is not serving avm file correctly. Original error: ${e.toString()}`,
+                    `Failed to load ${
+                        loadMethod.filePath
+                    }. This usually means that the web server is not serving avm file correctly. Original error: ${e.toString()}`,
                 );
             }
         } else if (isNode) {

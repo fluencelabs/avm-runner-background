@@ -1,7 +1,23 @@
+/*
+ * Copyright 2021 Fluence Labs Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { AvmRunner, CallResultsArray, LogLevel, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode } from 'browser-or-node';
 import { Thread, ModuleThread, BlobWorker, spawn } from 'threads';
-import { web, node } from './runnerBase64';
+import { webScript, nodeScript } from './runnerBase64';
 import { RunnerScriptInterface, wasmLoadingMethod } from './types';
 export { wasmLoadingMethod } from './types';
 
@@ -20,13 +36,14 @@ export class AvmRunnerBackground implements AvmRunner {
         let scriptText: string;
         let method: wasmLoadingMethod;
         if (isBrowser) {
-            scriptText = window.atob(web);
+            scriptText = window.atob(webScript);
             method = this._loadingMethod || {
                 method: 'fetch-from-url',
                 baseUrl: document.baseURI,
+                filePath: defaultAvmFileName,
             };
         } else if (isNode) {
-            scriptText = Buffer.from(node, 'base64').toString();
+            scriptText = Buffer.from(nodeScript, 'base64').toString();
             if (this._loadingMethod) {
                 method = this._loadingMethod;
             } else {

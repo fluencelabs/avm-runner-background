@@ -77,7 +77,7 @@ describe('Integration tests for web target', () => {
 
         console.log('test: checking expectations...');
         await expect(error).toMatch(
-            'Failed to load avm.wasm. This usually means that the web server is not serving avm.wasm file.',
+            'Failed to load avm.wasm. This usually means that the web server is not serving avm file correctly',
         );
     });
 });

@@ -4,7 +4,7 @@ export type wasmLoadingMethod =
     | {
           method: 'fetch-from-url';
           baseUrl: string;
-          filePath?: string;
+          filePath: string;
       }
     | {
           method: 'read-from-fs';
