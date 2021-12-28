@@ -17,9 +17,10 @@
 import { AvmRunner, CallResultsArray, LogLevel, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode } from 'browser-or-node';
 import { Thread, ModuleThread, BlobWorker, spawn } from 'threads';
+// TODO: research the possibility to load files asynchronously
 import { webScript, nodeScript } from './runnerBase64';
-import { RunnerScriptInterface, wasmLoadingMethod } from './types';
-export { wasmLoadingMethod } from './types';
+import { RunnerScriptInterface, wasmLoadingMethod } from '../../runner-script/src/types';
+export { wasmLoadingMethod } from '../../runner-script/src/types';
 
 const defaultAvmFileName = 'avm.wasm';
 const avmPackageName = '@fluencelabs/avm';
@@ -35,6 +36,7 @@ export class AvmRunnerBackground implements AvmRunner {
     async init(logLevel: LogLevel): Promise<void> {
         let scriptText: string;
         let method: wasmLoadingMethod;
+        // check if we are running inside the browser and instantiate worker with the corresponding script
         if (isBrowser) {
             scriptText = window.atob(webScript);
             method = this._loadingMethod || {
@@ -42,7 +44,9 @@ export class AvmRunnerBackground implements AvmRunner {
                 baseUrl: document.baseURI,
                 filePath: defaultAvmFileName,
             };
-        } else if (isNode) {
+        }
+        // check if we are running inside nodejs and instantiate worker with the corresponding script
+        else if (isNode) {
             scriptText = Buffer.from(nodeScript, 'base64').toString();
             if (this._loadingMethod) {
                 method = this._loadingMethod;

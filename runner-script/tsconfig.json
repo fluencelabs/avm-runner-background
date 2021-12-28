@@ -9,14 +9,15 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
-    "declaration": false,
+    "declaration": true,
     "esModuleInterop": true,
     "declarationMap": false,
     "strict": true,
     "noImplicitAny": false,
     "alwaysStrict": true,
     "noImplicitThis": true,
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "composite": true,
   },
   "exclude": [
     "node_modules",
@@ -24,5 +25,5 @@
   ],
   "include": [
     "src",
-  ]
+  ],
 }
