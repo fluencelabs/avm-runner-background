@@ -13,7 +13,6 @@ describe('NodeJS negative tests', () => {
 
         // act
         const res = await testRunner.init('off').catch((e) => e.message);
-        await testRunner.terminate();
 
         // assert
         expect(res).toMatch('Failed to load avm.wasm. Did you forget to install @fluencelabs/avm?');

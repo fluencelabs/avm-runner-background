@@ -34,7 +34,7 @@ export class AvmRunnerBackground implements AvmRunner {
     }
 
     async init(logLevel: LogLevel): Promise<void> {
-        let worker: Worker;
+        let workerPath: string;
         let method: wasmLoadingMethod;
         // check if we are running inside the browser and instantiate worker with the corresponding script
         if (isBrowser) {
@@ -43,11 +43,11 @@ export class AvmRunnerBackground implements AvmRunner {
                 baseUrl: document.baseURI,
                 filePath: defaultAvmFileName,
             };
-            worker = new Worker(runnerScriptWebPath);
+            workerPath = runnerScriptWebPath;
         }
         // check if we are running inside nodejs and instantiate worker with the corresponding script
         else if (isNode) {
-            worker = new Worker(runnerScriptNodePath);
+            workerPath = runnerScriptNodePath;
             if (this._loadingMethod) {
                 method = this._loadingMethod;
             } else {
@@ -73,7 +73,7 @@ export class AvmRunnerBackground implements AvmRunner {
             throw new Error('Unknown environment');
         }
 
-        this._worker = await spawn<RunnerScriptInterface>(worker);
+        this._worker = await spawn<RunnerScriptInterface>(new Worker(workerPath));
         await this._worker.init(logLevel, method);
     }
 
@@ -82,7 +82,7 @@ export class AvmRunnerBackground implements AvmRunner {
             return;
         }
 
-        await this._worker?.terminate();
+        await this._worker.terminate();
         await Thread.terminate(this._worker);
     }
 
