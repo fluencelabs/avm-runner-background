@@ -3,10 +3,6 @@ name: "publish-branch"
 on:
   workflow_dispatch
 
-defaults:
-    run:
-        working-directory: avm-runner-background
-
 jobs:
   npm-publish:
     name: "Publish"
@@ -14,6 +10,7 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: avm-runner-background
 
     steps:
       - name: Checkout repository
@@ -26,7 +23,9 @@ jobs:
           echo "BRANCH_NAME=$SANITIZED" >> $GITHUB_ENV
       ### Set version
       - name: Set version
-        run: npm version prerelease --no-git-tag-version --preid ${{ env.BRANCH_NAME }}-${{ github.run_number }}
+        run: |
+          ls -al
+          npm version prerelease --no-git-tag-version --preid ${{ env.BRANCH_NAME }}-${{ github.run_number }}
 
       ### Publish to NPM registry
       - uses: actions/setup-node@v1
