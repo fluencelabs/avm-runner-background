@@ -22,7 +22,7 @@ const logFunction = (level: LogLevel, message: string) => {
     }
 };
 
-let airInterpreter: AirInterpreter | null = null;
+let airInterpreter: AirInterpreter | 'not-set' | 'terminated' = 'not-set';
 
 const toExpose: RunnerScriptInterface = {
     init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
@@ -68,7 +68,7 @@ const toExpose: RunnerScriptInterface = {
     },
 
     terminate: async () => {
-        airInterpreter = null;
+        airInterpreter = 'not-set';
     },
 
     run: async (
@@ -81,9 +81,14 @@ const toExpose: RunnerScriptInterface = {
         },
         callResults: CallResultsArray,
     ): Promise<InterpreterResult> => {
-        if (airInterpreter === null) {
+        if (airInterpreter === 'not-set') {
             throw new Error('Interpreter is not initialized');
         }
+
+        if (airInterpreter === 'terminated') {
+            throw new Error('Interpreter is terminated');
+        }
+
         return airInterpreter.invoke(air, prevData, data, params, callResults);
     },
 };
