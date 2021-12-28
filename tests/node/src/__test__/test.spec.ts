@@ -6,8 +6,8 @@ const b = (s: string) => {
     return Buffer.from(s);
 };
 
-describe('Tests', () => {
-    it('should work', async () => {
+describe('Nodejs integration tests', () => {
+    it('AvmRunnerBackground should work correctly execute simple script', async () => {
         // arrange
         const testRunner = new AvmRunnerBackground();
         await testRunner.init('off');
@@ -26,7 +26,6 @@ describe('Tests', () => {
         await testRunner.terminate();
 
         // assert
-        console.log(res);
         expect(res).not.toBeUndefined();
     });
 });

@@ -4,6 +4,8 @@ import webpackConfig from '../../test-project/webpack.config.js';
 import process from 'process';
 import path from 'path';
 
+// change directory to the location to the test-project.
+// run all the subsequent Webpack scripts in that directory
 process.chdir(path.join(__dirname, '../../test-project/'));
 
 let server;
@@ -30,12 +32,12 @@ const stopServer = async () => {
     await server.stop();
 };
 
-describe('Tests', () => {
+describe('Integration tests for web target', () => {
     afterEach(async () => {
         await stopServer();
     });
 
-    it('Should work"', async () => {
+    it('AvmRunnerBackground should work correctly execute simple script"', async () => {
         console.log('test: starting server...');
         await startServer();
         console.log('test: navigating to page...');
