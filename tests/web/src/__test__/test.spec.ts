@@ -13,7 +13,7 @@ let server;
 jest.setTimeout(10000);
 
 const startServer = async (modifyConfig?) => {
-    const loadInBrowserToDebug = false; // set to true to debug
+    const loadInBrowserToDebug = true; // set to true to debug
 
     modifyConfig = modifyConfig || ((_) => {});
 
@@ -57,7 +57,7 @@ describe('Integration tests for web target', () => {
         });
     });
 
-    it('Should display correct error message if wasm is not served', async () => {
+    it.skip('Should display correct error message if wasm is not served', async () => {
         console.log('test: starting server...');
         await startServer((cfg) => {
             // simulating incorrect webpack setup

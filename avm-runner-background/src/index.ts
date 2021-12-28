@@ -16,14 +16,14 @@
 
 import { AvmRunner, CallResultsArray, LogLevel, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode } from 'browser-or-node';
-import { Thread, ModuleThread, spawn } from 'threads';
+import { Thread, ModuleThread, spawn, Worker } from 'threads';
 import { RunnerScriptInterface, wasmLoadingMethod } from '../../runner-script/src/types';
 export { wasmLoadingMethod } from '../../runner-script/src/types';
 
 const defaultAvmFileName = 'avm.wasm';
 const avmPackageName = '@fluencelabs/avm';
-const runnerScriptNodePath = './webpack.config.node.js';
-const runnerScriptWebPath = './webpack.config.web.js';
+const runnerScriptNodePath = './runnerScript.node.js';
+const runnerScriptWebPath = './runnerScript.web.js';
 
 export class AvmRunnerBackground implements AvmRunner {
     private _worker?: ModuleThread<RunnerScriptInterface>;
@@ -43,11 +43,11 @@ export class AvmRunnerBackground implements AvmRunner {
                 baseUrl: document.baseURI,
                 filePath: defaultAvmFileName,
             };
-            worker = new Worker(runnerScriptNodePath);
+            worker = new Worker(runnerScriptWebPath);
         }
         // check if we are running inside nodejs and instantiate worker with the corresponding script
         else if (isNode) {
-            worker = new Worker(runnerScriptWebPath);
+            worker = new Worker(runnerScriptNodePath);
             if (this._loadingMethod) {
                 method = this._loadingMethod;
             } else {

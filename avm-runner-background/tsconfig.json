@@ -4,7 +4,8 @@
       "es2015",
       "dom"
     ],
-    "outDir": "./dist/",
+    "rootDir": ".",
+    "outDir": "./disttmp/",
     "target": "es5",
     "module": "commonjs",
     "strict": true,
@@ -14,8 +15,7 @@
     "declaration": true,
     "declarationMap": false,
     "sourceMap": true,
-    "composite": true,
-    "allowJs": true,
+    "composite": true
   },
   "exclude": [
     "node_modules",

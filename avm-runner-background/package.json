@@ -4,8 +4,12 @@
     "description": "AVM runner implementation which executed in the background",
     "main": "./dist/index.js",
     "typings": "./dist/index.d.ts",
+    "bin": {
+        "copy-avm-runner": "./dist/copyRunnerScript.js"
+    },
     "scripts": {
         "build": "tsc",
+        "postbuild": "mkdir -p dist && cp -r disttmp/src/* dist",
         "test": "jest"
     },
     "author": "Fluence Labs",

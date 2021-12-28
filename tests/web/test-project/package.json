@@ -1,7 +1,7 @@
 {
     "scripts": {
         "start": "webpack serve",
-        "postinstall": "copyAvm public",
+        "copy-public": "copy-avm public && copy-avm-runner public",
         "install:local": "install-local ../../../avm-runner-background",
         "build": "webpack --mode=production --node-env=production",
         "build:dev": "webpack --mode=development",
@@ -21,7 +21,7 @@
         "webpack": "^5.65.0",
         "webpack-cli": "^4.9.1",
         "webpack-dev-server": "^4.6.0",
-        "@fluencelabs/avm": "0.19.0-dynamic-import-wasm.5"
+        "@fluencelabs/avm": "0.19.0-dynamic-import-wasm.6"
     },
     "dependencies": {
         "js-base64": "^3.7.2"

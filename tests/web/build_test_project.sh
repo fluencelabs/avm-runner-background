@@ -7,5 +7,6 @@ cd "$(dirname "$0")"
     cd test-project
     npm i
     npm run install:local
+    npm run copy-public
     npm run build
 )
