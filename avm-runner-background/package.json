@@ -1,6 +1,6 @@
 {
     "name": "@fluencelabs/avm-runner-background",
-    "version": "0.1.0",
+    "version": "0.0.1",
     "description": "AVM runner implementation which executed in the background",
     "main": "./dist/index.js",
     "typings": "./dist/index.d.ts",
