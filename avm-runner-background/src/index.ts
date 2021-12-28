@@ -17,8 +17,8 @@
 import { AvmRunner, CallResultsArray, LogLevel, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode } from 'browser-or-node';
 import { Thread, ModuleThread, spawn, Worker } from 'threads';
-import { RunnerScriptInterface, wasmLoadingMethod } from '../../runner-script/src/types';
-export { wasmLoadingMethod } from '../../runner-script/src/types';
+import { RunnerScriptInterface, wasmLoadingMethod } from './types';
+export { wasmLoadingMethod } from './types';
 
 const defaultAvmFileName = 'avm.wasm';
 const avmPackageName = '@fluencelabs/avm';

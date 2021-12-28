@@ -4,8 +4,7 @@
       "es2015",
       "dom"
     ],
-    "rootDir": ".",
-    "outDir": "./disttmp/",
+    "outDir": "./dist/",
     "target": "es5",
     "module": "commonjs",
     "strict": true,
@@ -15,7 +14,6 @@
     "declaration": true,
     "declarationMap": false,
     "sourceMap": true,
-    "composite": true
   },
   "exclude": [
     "node_modules",
@@ -23,10 +21,5 @@
    ],
   "include": [
     "src"
-  ],
-  "references": [
-    {
-      "path": "../runner-script/"
-    }
   ],
 }
