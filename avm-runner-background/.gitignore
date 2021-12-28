@@ -1,4 +1,5 @@
-src/runnerBase64.ts
+src/runnerScript.node.js
+src/runnerScript.web.js
 
 # Logs
 logs

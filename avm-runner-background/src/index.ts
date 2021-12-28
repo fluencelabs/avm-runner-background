@@ -16,14 +16,14 @@
 
 import { AvmRunner, CallResultsArray, LogLevel, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode } from 'browser-or-node';
-import { Thread, ModuleThread, BlobWorker, spawn } from 'threads';
-// TODO: research the possibility to load files asynchronously
-import { webScript, nodeScript } from './runnerBase64';
+import { Thread, ModuleThread, spawn } from 'threads';
 import { RunnerScriptInterface, wasmLoadingMethod } from '../../runner-script/src/types';
 export { wasmLoadingMethod } from '../../runner-script/src/types';
 
 const defaultAvmFileName = 'avm.wasm';
 const avmPackageName = '@fluencelabs/avm';
+const runnerScriptNodePath = './webpack.config.node.js';
+const runnerScriptWebPath = './webpack.config.web.js';
 
 export class AvmRunnerBackground implements AvmRunner {
     private _worker?: ModuleThread<RunnerScriptInterface>;
@@ -34,20 +34,20 @@ export class AvmRunnerBackground implements AvmRunner {
     }
 
     async init(logLevel: LogLevel): Promise<void> {
-        let scriptText: string;
+        let worker: Worker;
         let method: wasmLoadingMethod;
         // check if we are running inside the browser and instantiate worker with the corresponding script
         if (isBrowser) {
-            scriptText = window.atob(webScript);
             method = this._loadingMethod || {
                 method: 'fetch-from-url',
                 baseUrl: document.baseURI,
                 filePath: defaultAvmFileName,
             };
+            worker = new Worker(runnerScriptNodePath);
         }
         // check if we are running inside nodejs and instantiate worker with the corresponding script
         else if (isNode) {
-            scriptText = Buffer.from(nodeScript, 'base64').toString();
+            worker = new Worker(runnerScriptWebPath);
             if (this._loadingMethod) {
                 method = this._loadingMethod;
             } else {
@@ -73,7 +73,7 @@ export class AvmRunnerBackground implements AvmRunner {
             throw new Error('Unknown environment');
         }
 
-        this._worker = await spawn<RunnerScriptInterface>(BlobWorker.fromText(scriptText));
+        this._worker = await spawn<RunnerScriptInterface>(worker);
         await this._worker.init(logLevel, method);
     }
 
