@@ -3,10 +3,6 @@ name: "publish-branch"
 on:
   workflow_dispatch
 
-defaults:
-    run:
-        working-directory: avm-runner-background
-
 jobs:
   npm-publish:
     name: "Publish"
@@ -14,6 +10,7 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: avm-runner-background
 
     steps:
       - name: Checkout repository

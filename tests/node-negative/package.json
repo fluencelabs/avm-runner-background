@@ -1,0 +1,16 @@
+{
+    "scripts": {
+        "install:local": "install-local ../../avm-runner-background",
+        "build": "tsc",
+        "test": "jest"
+    },
+    "devDependencies": {
+        "@types/jest": "^27.0.3",
+        "@types/node": "^16.11.10",
+        "install-local": "^3.0.1",
+        "jest": "^27.4.0",
+        "ts-jest": "^27.0.7",
+        "typescript": "^4.0.0"
+    },
+    "dependencies": {}
+}
