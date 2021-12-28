@@ -1,0 +1,45 @@
+name:  Run negative tests for nodejs
+
+on:
+    push:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [15.x, 16.x]
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-v1-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-v1-node-${{ matrix.node-version }}
+
+            - name: Setup Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+
+            - name: build avm-runner-background
+              working-directory: avm-runner-background
+              env: 
+                CI: true
+              run: |
+                  npm i
+                  ./build_runner.sh
+                  npm run build
+
+            - name: run tests
+              working-directory: "tests/node-negative"
+              env: 
+                  CI: true
+              run: |
+                npm install
+                npm run install:local
+                npm run test

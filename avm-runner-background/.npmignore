@@ -1,0 +1,11 @@
+.idea
+.gitignore
+node_modules
+types
+
+src/
+
+tsconfig.json
+webpack.config.js
+.prettierrc.js
+build_runner.sh
