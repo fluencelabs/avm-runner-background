@@ -6,7 +6,7 @@ const b = (s: string) => {
     return Buffer.from(s);
 };
 
-describe('Tests', () => {
+describe('NodeJS negative tests', () => {
     it('Should display correct error message if wasm is not served', async () => {
         // arrange
         const testRunner = new AvmRunnerBackground();
