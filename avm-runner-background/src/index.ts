@@ -40,7 +40,7 @@ export class AvmRunnerBackground implements AvmRunner {
         if (isBrowser) {
             method = this._loadingMethod || {
                 method: 'fetch-from-url',
-                baseUrl: document.baseURI,
+                baseUrl: window.location.origin,
                 filePath: defaultAvmFileName,
             };
             workerPath = runnerScriptWebPath;
