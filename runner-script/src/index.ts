@@ -32,7 +32,7 @@ const toExpose: RunnerScriptInterface = {
                 throw new Error("Only 'fetch-from-url' is supported for browsers");
             }
 
-            const url = loadMethod.baseUrl + loadMethod.filePath;
+            const url = loadMethod.baseUrl + '/' + loadMethod.filePath;
 
             try {
                 module = await WebAssembly.compileStreaming(fetch(url));
