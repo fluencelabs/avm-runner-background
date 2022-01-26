@@ -75,10 +75,7 @@ export class AvmRunnerBackground implements AvmRunner {
                         },
                     };
                 } catch (e: any) {
-                    throw new Error(
-                        'Failed to load avm.wasm. Did you forget to install @fluencelabs/avm? Original error: ' +
-                            e.toString(),
-                    );
+                    throw new Error('Failed to load wasm file(s). Original error: ' + e.toString());
                 }
             }
         } else {

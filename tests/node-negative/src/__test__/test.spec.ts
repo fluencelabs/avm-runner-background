@@ -15,6 +15,6 @@ describe('NodeJS negative tests', () => {
         const res = await testRunner.init('off').catch((e) => e.message);
 
         // assert
-        expect(res).toMatch('Failed to load avm.wasm.');
+        expect(res).toMatch('Failed to load wasm file(s).');
     });
 });

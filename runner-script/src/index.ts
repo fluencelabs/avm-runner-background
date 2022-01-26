@@ -30,12 +30,12 @@ type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 let marineInstance: Awaited<ReturnType<typeof init>> | 'not-set' | 'terminated' = 'not-set';
 
 const tryLoadFromUrl = async (baseUrl: string, url: string): Promise<WebAssembly.Module> => {
-    url = baseUrl + '/' + url;
+    const fullUrl = baseUrl + '/' + url;
     try {
-        return await WebAssembly.compileStreaming(fetch(url));
+        return await WebAssembly.compileStreaming(fetch(fullUrl));
     } catch (e) {
         throw new Error(
-            `Failed to load ${url}. This usually means that the web server is not serving wasm files correctly. Original error: ${e.toString()}`,
+            `Failed to load ${fullUrl}. This usually means that the web server is not serving wasm files correctly. Original error: ${e.toString()}`,
         );
     }
 };
@@ -53,7 +53,6 @@ const tryLoadFromFs = async (path: string): Promise<WebAssembly.Module> => {
 };
 
 const decoder = new TextDecoder();
-const encoder = new TextEncoder();
 
 const toExpose: RunnerScriptInterface = {
     init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
