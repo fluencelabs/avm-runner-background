@@ -21,7 +21,9 @@ import { RunnerScriptInterface, wasmLoadingMethod } from './types';
 export { wasmLoadingMethod } from './types';
 
 const defaultAvmFileName = 'avm.wasm';
+const defaultMarineFileName = 'marine-js.wasm';
 const avmPackageName = '@fluencelabs/avm';
+const marinePackageName = '@fluencelabs/marine-js';
 const runnerScriptNodePath = './runnerScript.node.js';
 const runnerScriptWebPath = './runnerScript.web.js';
 
@@ -41,7 +43,10 @@ export class AvmRunnerBackground implements AvmRunner {
             method = this._loadingMethod || {
                 method: 'fetch-from-url',
                 baseUrl: window.location.origin,
-                filePath: defaultAvmFileName,
+                filePaths: {
+                    avm: defaultAvmFileName,
+                    marine: defaultMarineFileName,
+                },
             };
             workerPath = runnerScriptWebPath;
         }
@@ -54,13 +59,20 @@ export class AvmRunnerBackground implements AvmRunner {
                 try {
                     // webpack will complain about missing dependencies for web target
                     // to fix this we have to use eval('require')
-                    const path = eval('require')('path');
-                    const fluencePath = eval('require').resolve(avmPackageName);
-                    const filePath = path.join(path.dirname(fluencePath), defaultAvmFileName);
+                    const require = eval('require');
+                    const path = require('path');
+                    const avmPackagePath = require.resolve(avmPackageName);
+                    const avmFilePath = path.join(path.dirname(avmPackagePath), defaultAvmFileName);
+
+                    const marinePackagePath = require.resolve(marinePackageName);
+                    const marineFilePath = path.join(path.dirname(marinePackagePath), defaultMarineFileName);
 
                     method = {
                         method: 'read-from-fs',
-                        filePath: filePath,
+                        filePaths: {
+                            avm: avmFilePath,
+                            marine: marineFilePath,
+                        },
                     };
                 } catch (e: any) {
                     throw new Error(
