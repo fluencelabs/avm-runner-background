@@ -26,6 +26,9 @@ describe('Nodejs integration tests', () => {
         await testRunner.terminate();
 
         // assert
-        expect(res).not.toBeUndefined();
+        expect(res).toMatchObject({
+            retCode: 0,
+            errorMessage: '',
+        });
     });
 });

@@ -1,7 +1,7 @@
 {
     "scripts": {
         "start": "webpack serve",
-        "copy-public": "copy-avm public && copy-avm-runner public",
+        "copy-public": "copy-avm public && copy-marine public && copy-avm-runner public",
         "install:local": "install-local ../../../avm-runner-background",
         "build": "webpack --mode=production --node-env=production",
         "build:dev": "webpack --mode=development",

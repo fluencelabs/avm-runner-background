@@ -1,12 +1,11 @@
 import { WASI } from '@wasmer/wasi';
 import { WasmFs } from '@wasmer/wasmfs';
+import bindings from '@wasmer/wasi/lib/bindings/browser';
 import { LogLevel, CallResultsArray, InterpreterResult, CallRequest } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { expose } from 'threads';
 import { wasmLoadingMethod, RunnerScriptInterface } from './types';
 import { init } from '@fluencelabs/marine-js';
-// import bindingsNode from '@wasmer/wasi/lib/bindings/node';
-import bindings from '@wasmer/wasi/lib/bindings/browser';
 
 const logFunction = (level: LogLevel, message: string) => {
     switch (level) {
@@ -49,9 +48,7 @@ const tryLoadFromFs = async (path: string): Promise<WebAssembly.Module> => {
         const file = fs.readFileSync(path);
         return await WebAssembly.compile(file);
     } catch (e) {
-        throw new Error(
-            `Failed to load ${path}. Did you forget to install @fluencelabs/avm? Original error: ${e.toString()}`,
-        );
+        throw new Error(`Failed to load ${path}. ${e.toString()}`);
     }
 };
 
@@ -62,14 +59,12 @@ const toExpose: RunnerScriptInterface = {
     init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
         let avmModule: WebAssembly.Module;
         let marineModule: WebAssembly.Module;
-        // let bindings;
         if (isBrowser || isWebWorker) {
             if (loadMethod.method !== 'fetch-from-url') {
                 throw new Error("Only 'fetch-from-url' is supported for browsers");
             }
             avmModule = await tryLoadFromUrl(loadMethod.baseUrl, loadMethod.filePaths.avm);
             marineModule = await tryLoadFromUrl(loadMethod.baseUrl, loadMethod.filePaths.marine);
-            // bindings = bindingsNode;
         } else if (isNode) {
             if (loadMethod.method !== 'read-from-fs') {
                 throw new Error("Only 'read-from-fs' is supported for nodejs");
@@ -77,32 +72,15 @@ const toExpose: RunnerScriptInterface = {
 
             avmModule = await tryLoadFromFs(loadMethod.filePaths.avm);
             marineModule = await tryLoadFromFs(loadMethod.filePaths.marine);
-            // bindings = bindingsBrowser;
         } else {
             throw new Error('Environment not supported');
         }
 
+        // wasi is needed to run AVM with marine-js
         const wasmFs = new WasmFs();
-
         const wasi = new WASI({
-            // Arguments passed to the Wasm Module
-            // The first argument is usually the filepath to the executable WASI module
-            // we want to run.
             args: [],
-
-            // Environment variables that are accesible to the WASI module
             env: {},
-
-            // Bindings that are used by the WASI Instance (fs, path, etc...)
-            // bindings: {
-            //     hrtime: () => BigInt(0),
-            //     exit: (rval: number) => {},
-            //     kill: (signal: string) => {},
-            //     randomFillSync: <T>(buffer: T, offset: number, size: number) => buffer,
-            //     isTTY: (fd: number) => false,
-            //     fs: wasmFs.fs,
-            //     path: undefined,
-            // },
             bindings: {
                 ...bindings,
                 fs: wasmFs.fs,
@@ -122,8 +100,8 @@ const toExpose: RunnerScriptInterface = {
         marineInstance = await init(marineModule);
 
         const customSections = WebAssembly.Module.customSections(avmModule, 'interface-types');
-        const itcustomSections = new Uint8Array(customSections[0]);
-        marineInstance.register_module('avm', itcustomSections, avmInstance);
+        const itCustomSections = new Uint8Array(customSections[0]);
+        marineInstance.register_module('avm', itCustomSections, avmInstance);
     },
 
     terminate: async () => {
@@ -157,13 +135,10 @@ const toExpose: RunnerScriptInterface = {
                 };
             }
 
-            //const paramsToPass = encoder.encode(
-            // const paramsToPass = JSON.stringify({
             const paramsToPass = {
                 init_peer_id: params.initPeerId,
                 current_peer_id: params.currentPeerId,
             };
-            //);
 
             const avmArg = JSON.stringify([
                 air,
@@ -173,7 +148,6 @@ const toExpose: RunnerScriptInterface = {
                 Array.from(Buffer.from(JSON.stringify(callResultsToPass))),
             ]);
 
-            console.log(avmArg);
             const rawResult = marineInstance.call_module('avm', 'invoke', avmArg);
 
             let result: any;
