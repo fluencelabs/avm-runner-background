@@ -100,7 +100,14 @@ const toExpose: RunnerScriptInterface = {
 
         const customSections = WebAssembly.Module.customSections(avmModule, 'interface-types');
         const itCustomSections = new Uint8Array(customSections[0]);
-        marineInstance.register_module('avm', itCustomSections, avmInstance);
+        let rawResult = marineInstance.register_module('avm', itCustomSections, avmInstance);
+
+        let result: any;
+        try {
+            result = JSON.parse(rawResult);
+        } catch (ex) {
+            throw "register_module result parsing error: " + ex + ", original text: " + rawResult;
+        }
     },
 
     terminate: async () => {
@@ -152,7 +159,15 @@ const toExpose: RunnerScriptInterface = {
             let result: any;
             try {
                 result = JSON.parse(rawResult);
-            } catch (ex) {}
+            } catch (ex) {
+                throw "call_module result parsing error: " + ex + ", original text: " + rawResult;
+            }
+
+            if (result.error !== "") {
+                throw "call_module returned error: " + result.error;
+            }
+
+            result = result.result;
 
             const callRequestsStr = decoder.decode(new Uint8Array(result.call_requests));
             let parsedCallRequests;
