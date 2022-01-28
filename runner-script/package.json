@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "@fluencelabs/avm-runner-interface": "^0.2.0",
-        "@fluencelabs/marine-js": "^0.0.2-snapshot-4",
+        "@fluencelabs/marine-js": "^0.1.0-web-runtime-experiments.0",
         "@wasmer/wasi": "^0.12.0",
         "@wasmer/wasmfs": "^0.12.0",
         "browser-or-node": "^2.0.0",
