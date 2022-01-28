@@ -21,7 +21,7 @@
         "webpack": "^5.65.0",
         "webpack-cli": "^4.9.1",
         "webpack-dev-server": "^4.6.0",
-        "@fluencelabs/avm": "^0.20.0-marine-web.3",
+        "@fluencelabs/avm": "0.20.0-marine-web.3",
         "@fluencelabs/marine-js": "^0.1.0-web-runtime-experiments.0"
     },
     "dependencies": {
