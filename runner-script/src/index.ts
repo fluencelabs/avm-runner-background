@@ -7,6 +7,18 @@ import { expose } from 'threads';
 import { wasmLoadingMethod, RunnerScriptInterface } from './types';
 import { init } from '@fluencelabs/marine-js';
 
+type LogImport = {
+    log_utf8_string: (level: any, target: any, offset: any, size: any) => void;
+};
+
+type ImportObject = {
+    host: LogImport;
+};
+
+type HostImportsConfig = {
+    exports: any;
+};
+
 const logFunction = (level: LogLevel, message: string) => {
     switch (level) {
         case 'error':
@@ -24,6 +36,60 @@ const logFunction = (level: LogLevel, message: string) => {
             break;
     }
 };
+
+let cachegetUint8Memory0 = null;
+
+function getUint8Memory0(wasm) {
+    if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachegetUint8Memory0;
+}
+
+function getStringFromWasm0(wasm, ptr, len) {
+    return decoder.decode(getUint8Memory0(wasm).subarray(ptr, ptr + len));
+}
+
+/// Returns import object that describes host functions called by AIR interpreter
+function newImportObject(cfg: HostImportsConfig): ImportObject {
+    return {
+        host: log_import(cfg),
+    };
+}
+
+function log_import(cfg: HostImportsConfig): LogImport {
+    return {
+        log_utf8_string: (level: any, target: any, offset: any, size: any) => {
+            let wasm = cfg.exports;
+
+            try {
+                let str = getStringFromWasm0(wasm, offset, size);
+                let levelStr: LogLevel;
+                switch (level) {
+                    case 1:
+                        levelStr = 'error';
+                        break;
+                    case 2:
+                        levelStr = 'warn';
+                        break;
+                    case 3:
+                        levelStr = 'info';
+                        break;
+                    case 4:
+                        levelStr = 'debug';
+                        break;
+                    case 6:
+                        levelStr = 'trace';
+                        break;
+                    default:
+                        return;
+                }
+                logFunction(levelStr, str);
+            } finally {
+            }
+        },
+    };
+}
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -86,15 +152,16 @@ const toExpose: RunnerScriptInterface = {
             },
         });
 
+        const cfg = {
+            exports: undefined,
+        };
+
         const avmInstance = await WebAssembly.instantiate(avmModule, {
             ...wasi.getImports(avmModule),
-            host: {
-                log_utf8_string: (level: any, target: any, offset: any, size: any) => {
-                    console.log('logging, logging, logging');
-                },
-            },
+            ...newImportObject(cfg)
         });
         wasi.start(avmInstance);
+        cfg.exports = avmInstance.exports;
 
         marineInstance = await init(marineModule);
 
