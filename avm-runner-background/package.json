@@ -20,8 +20,6 @@
     },
     "dependencies": {
         "@fluencelabs/avm-runner-interface": "^0.2.0",
-        "@fluencelabs/avm": "0.20.8",
-        "@fluencelabs/marine-js": "0.1.0",
         "browser-or-node": "^2.0.0",
         "threads": "^1.7.0"
     }
