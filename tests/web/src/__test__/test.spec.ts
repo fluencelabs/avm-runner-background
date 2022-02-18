@@ -19,7 +19,7 @@ const startServer = async (modifyConfig?) => {
 
     const cfg = webpackConfig();
     modifyConfig(cfg);
-    const compiler = Webpack(cfg);
+    const compiler = Webpack(cfg as any);
     const devServerOptions = { ...cfg.devServer, open: loadInBrowserToDebug };
     server = new WebpackDevServer(devServerOptions, compiler);
     await server.start();
