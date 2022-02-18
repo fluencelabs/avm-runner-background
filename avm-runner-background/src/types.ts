@@ -16,15 +16,20 @@
 
 import { CallResultsArray, InterpreterResult, LogLevel } from '@fluencelabs/avm-runner-interface';
 
+interface FilePaths {
+    avm: string;
+    marine: string;
+}
+
 export type wasmLoadingMethod =
     | {
           method: 'fetch-from-url';
           baseUrl: string;
-          filePath: string;
+          filePaths: FilePaths;
       }
     | {
           method: 'read-from-fs';
-          filePath: string;
+          filePaths: FilePaths;
       };
 
 export type RunnerScriptInterface = {

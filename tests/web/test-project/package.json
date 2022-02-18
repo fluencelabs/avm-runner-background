@@ -1,7 +1,7 @@
 {
     "scripts": {
         "start": "webpack serve",
-        "copy-public": "copy-avm public && copy-avm-runner public",
+        "copy-public": "copy-avm public && copy-marine public && copy-avm-runner public",
         "install:local": "install-local ../../../avm-runner-background",
         "build": "webpack --mode=production --node-env=production",
         "build:dev": "webpack --mode=development",
@@ -21,7 +21,8 @@
         "webpack": "^5.65.0",
         "webpack-cli": "^4.9.1",
         "webpack-dev-server": "^4.6.0",
-        "@fluencelabs/avm": "0.19.6"
+        "@fluencelabs/avm": "0.20.8",
+        "@fluencelabs/marine-js": "0.1.0"
     },
     "dependencies": {
         "js-base64": "^3.7.2"

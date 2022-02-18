@@ -13,11 +13,11 @@ let server;
 jest.setTimeout(10000);
 
 const startServer = async (modifyConfig?) => {
-    const loadInBrowserToDebug = true; // set to true to debug
+    const loadInBrowserToDebug = false; // set to true to debug
 
     modifyConfig = modifyConfig || ((_) => {});
 
-    const cfg = webpackConfig();
+    const cfg: any = webpackConfig();
     modifyConfig(cfg);
     const compiler = Webpack(cfg);
     const devServerOptions = { ...cfg.devServer, open: loadInBrowserToDebug };

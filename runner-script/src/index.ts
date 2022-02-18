@@ -1,8 +1,23 @@
-import { LogLevel, CallResultsArray, InterpreterResult } from '@fluencelabs/avm-runner-interface';
-import { AirInterpreter } from '@fluencelabs/avm';
+import { WASI } from '@wasmer/wasi';
+import { WasmFs } from '@wasmer/wasmfs';
+import bindings from '@wasmer/wasi/lib/bindings/browser';
+import { LogLevel, CallResultsArray, InterpreterResult, CallRequest } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { expose } from 'threads';
 import { wasmLoadingMethod, RunnerScriptInterface } from './types';
+import { init } from '@fluencelabs/marine-js';
+
+type LogImport = {
+    log_utf8_string: (level: any, target: any, offset: any, size: any) => void;
+};
+
+type ImportObject = {
+    host: LogImport;
+};
+
+type HostImportsConfig = {
+    exports: any;
+};
 
 const logFunction = (level: LogLevel, message: string) => {
     switch (level) {
@@ -22,51 +37,148 @@ const logFunction = (level: LogLevel, message: string) => {
     }
 };
 
-let airInterpreter: AirInterpreter | 'not-set' | 'terminated' = 'not-set';
+let cachegetUint8Memory0 = null;
+
+function getUint8Memory0(wasm) {
+    if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachegetUint8Memory0;
+}
+
+function getStringFromWasm0(wasm, ptr, len) {
+    return decoder.decode(getUint8Memory0(wasm).subarray(ptr, ptr + len));
+}
+
+/// Returns import object that describes host functions called by AIR interpreter
+function newImportObject(cfg: HostImportsConfig): ImportObject {
+    return {
+        host: log_import(cfg),
+    };
+}
+
+function log_import(cfg: HostImportsConfig): LogImport {
+    return {
+        log_utf8_string: (level: any, target: any, offset: any, size: any) => {
+            let wasm = cfg.exports;
+
+            try {
+                let str = getStringFromWasm0(wasm, offset, size);
+                let levelStr: LogLevel;
+                switch (level) {
+                    case 1:
+                        levelStr = 'error';
+                        break;
+                    case 2:
+                        levelStr = 'warn';
+                        break;
+                    case 3:
+                        levelStr = 'info';
+                        break;
+                    case 4:
+                        levelStr = 'debug';
+                        break;
+                    case 6:
+                        levelStr = 'trace';
+                        break;
+                    default:
+                        return;
+                }
+                logFunction(levelStr, str);
+            } finally {
+            }
+        },
+    };
+}
+
+type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
+
+let marineInstance: Awaited<ReturnType<typeof init>> | 'not-set' | 'terminated' = 'not-set';
+
+const tryLoadFromUrl = async (baseUrl: string, url: string): Promise<WebAssembly.Module> => {
+    const fullUrl = baseUrl + '/' + url;
+    try {
+        return await WebAssembly.compileStreaming(fetch(fullUrl));
+    } catch (e) {
+        throw new Error(
+            `Failed to load ${fullUrl}. This usually means that the web server is not serving wasm files correctly. Original error: ${e.toString()}`,
+        );
+    }
+};
+
+const tryLoadFromFs = async (path: string): Promise<WebAssembly.Module> => {
+    try {
+        // webpack will complain about missing dependencies for web target
+        // to fix this we have to use eval('require')
+        const fs = eval('require')('fs');
+        const file = fs.readFileSync(path);
+        return await WebAssembly.compile(file);
+    } catch (e) {
+        throw new Error(`Failed to load ${path}. ${e.toString()}`);
+    }
+};
+
+const decoder = new TextDecoder();
 
 const toExpose: RunnerScriptInterface = {
     init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
-        let module: WebAssembly.Module;
+        let avmModule: WebAssembly.Module;
+        let marineModule: WebAssembly.Module;
         if (isBrowser || isWebWorker) {
             if (loadMethod.method !== 'fetch-from-url') {
                 throw new Error("Only 'fetch-from-url' is supported for browsers");
             }
-
-            const url = loadMethod.baseUrl + '/' + loadMethod.filePath;
-
-            try {
-                module = await WebAssembly.compileStreaming(fetch(url));
-            } catch (e) {
-                throw new Error(
-                    `Failed to load ${url}. This usually means that the web server is not serving avm file correctly. Original error: ${e.toString()}`,
-                );
-            }
+            avmModule = await tryLoadFromUrl(loadMethod.baseUrl, loadMethod.filePaths.avm);
+            marineModule = await tryLoadFromUrl(loadMethod.baseUrl, loadMethod.filePaths.marine);
         } else if (isNode) {
             if (loadMethod.method !== 'read-from-fs') {
                 throw new Error("Only 'read-from-fs' is supported for nodejs");
             }
 
-            try {
-                // webpack will complain about missing dependencies for web target
-                // to fix this we have to use eval('require')
-                const fs = eval('require')('fs');
-                const file = fs.readFileSync(loadMethod.filePath);
-                module = await WebAssembly.compile(file);
-            } catch (e) {
-                throw new Error(
-                    `Failed to load ${
-                        loadMethod.filePath
-                    }. Did you forget to install @fluencelabs/avm? Original error: ${e.toString()}`,
-                );
-            }
+            avmModule = await tryLoadFromFs(loadMethod.filePaths.avm);
+            marineModule = await tryLoadFromFs(loadMethod.filePaths.marine);
         } else {
             throw new Error('Environment not supported');
         }
-        airInterpreter = await AirInterpreter.create(module, logLevel, logFunction);
+
+        // wasi is needed to run AVM with marine-js
+        const wasmFs = new WasmFs();
+        const wasi = new WASI({
+            args: [],
+            env: {},
+            bindings: {
+                ...bindings,
+                fs: wasmFs.fs,
+            },
+        });
+
+        const cfg = {
+            exports: undefined,
+        };
+
+        const avmInstance = await WebAssembly.instantiate(avmModule, {
+            ...wasi.getImports(avmModule),
+            ...newImportObject(cfg)
+        });
+        wasi.start(avmInstance);
+        cfg.exports = avmInstance.exports;
+
+        marineInstance = await init(marineModule);
+
+        const customSections = WebAssembly.Module.customSections(avmModule, 'interface-types');
+        const itCustomSections = new Uint8Array(customSections[0]);
+        let rawResult = marineInstance.register_module('avm', itCustomSections, avmInstance);
+
+        let result: any;
+        try {
+            result = JSON.parse(rawResult);
+        } catch (ex) {
+            throw "register_module result parsing error: " + ex + ", original text: " + rawResult;
+        }
     },
 
     terminate: async () => {
-        airInterpreter = 'not-set';
+        marineInstance = 'not-set';
     },
 
     run: async (
@@ -79,15 +191,107 @@ const toExpose: RunnerScriptInterface = {
         },
         callResults: CallResultsArray,
     ): Promise<InterpreterResult> => {
-        if (airInterpreter === 'not-set') {
+        if (marineInstance === 'not-set') {
             throw new Error('Interpreter is not initialized');
         }
 
-        if (airInterpreter === 'terminated') {
+        if (marineInstance === 'terminated') {
             throw new Error('Interpreter is terminated');
         }
 
-        return airInterpreter.invoke(air, prevData, data, params, callResults);
+        try {
+            const callResultsToPass: any = {};
+            for (let [k, v] of callResults) {
+                callResultsToPass[k] = {
+                    ret_code: v.retCode,
+                    result: v.result,
+                };
+            }
+
+            const paramsToPass = {
+                init_peer_id: params.initPeerId,
+                current_peer_id: params.currentPeerId,
+            };
+
+            const avmArg = JSON.stringify([
+                air,
+                Array.from(prevData),
+                Array.from(data),
+                paramsToPass,
+                Array.from(Buffer.from(JSON.stringify(callResultsToPass))),
+            ]);
+
+            const rawResult = marineInstance.call_module('avm', 'invoke', avmArg);
+
+            let result: any;
+            try {
+                result = JSON.parse(rawResult);
+            } catch (ex) {
+                throw "call_module result parsing error: " + ex + ", original text: " + rawResult;
+            }
+
+            if (result.error !== "") {
+                throw "call_module returned error: " + result.error;
+            }
+
+            result = result.result;
+
+            const callRequestsStr = decoder.decode(new Uint8Array(result.call_requests));
+            let parsedCallRequests;
+            try {
+                if (callRequestsStr.length === 0) {
+                    parsedCallRequests = {};
+                } else {
+                    parsedCallRequests = JSON.parse(callRequestsStr);
+                }
+            } catch (e) {
+                throw "Couldn't parse call requests: " + e + '. Original string is: ' + callRequestsStr;
+            }
+
+            let resultCallRequests: Array<[key: number, callRequest: CallRequest]> = [];
+            for (const k in parsedCallRequests) {
+                const v = parsedCallRequests[k];
+
+                let arguments_;
+                let tetraplets;
+                try {
+                    arguments_ = JSON.parse(v.arguments);
+                } catch (e) {
+                    throw "Couldn't parse arguments: " + e + '. Original string is: ' + arguments_;
+                }
+
+                try {
+                    tetraplets = JSON.parse(v.tetraplets);
+                } catch (e) {
+                    throw "Couldn't parse tetraplets: " + e + '. Original string is: ' + tetraplets;
+                }
+
+                resultCallRequests.push([
+                    k as any,
+                    {
+                        serviceId: v.service_id,
+                        functionName: v.function_name,
+                        arguments: arguments_,
+                        tetraplets: tetraplets,
+                    },
+                ]);
+            }
+            return {
+                retCode: result.ret_code,
+                errorMessage: result.error_message,
+                data: result.data,
+                nextPeerPks: result.next_peer_pks,
+                callRequests: resultCallRequests,
+            };
+        } catch (e) {
+            return {
+                retCode: -1,
+                errorMessage: 'marine-js call failed, ' + e,
+                data: undefined,
+                nextPeerPks: undefined,
+                callRequests: undefined,
+            };
+        }
     },
 };
 

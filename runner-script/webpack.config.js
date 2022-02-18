@@ -2,9 +2,9 @@
 
 const path = require('path');
 
-const isProduction = true;
+// const isProduction = true;
 // uncomment to debug
-// const isProduction = false;
+const isProduction = false;
 
 const config = {
     entry: './src/index.ts',

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 # set current working directory to script directory to run script from everywhere
 cd "$(dirname "$0")"
 
