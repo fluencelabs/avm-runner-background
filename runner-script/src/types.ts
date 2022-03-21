@@ -14,26 +14,12 @@
  * limitations under the License.
  */
 
-import { CallResultsArray, InterpreterResult, LogLevel } from '@fluencelabs/avm-runner-interface';
+import { CallResultsArray, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 
-interface FilePaths {
-    avm: string;
-    marine: string;
-}
-
-export type wasmLoadingMethod =
-    | {
-          method: 'fetch-from-url';
-          baseUrl: string;
-          filePaths: FilePaths;
-      }
-    | {
-          method: 'read-from-fs';
-          filePaths: FilePaths;
-      };
+export interface Config {}
 
 export type RunnerScriptInterface = {
-    init: (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => Promise<void>;
+    init: (config: Config, marine: SharedArrayBuffer, module: SharedArrayBuffer) => Promise<any>;
     terminate: () => Promise<void>;
     run: (
         air: string,

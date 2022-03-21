@@ -2,9 +2,8 @@ import { WASI } from '@wasmer/wasi';
 import { WasmFs } from '@wasmer/wasmfs';
 import bindings from '@wasmer/wasi/lib/bindings/browser';
 import { LogLevel, CallResultsArray, InterpreterResult, CallRequest } from '@fluencelabs/avm-runner-interface';
-import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { expose } from 'threads';
-import { wasmLoadingMethod, RunnerScriptInterface } from './types';
+import { Config, RunnerScriptInterface } from './types';
 import { init } from '@fluencelabs/marine-js';
 
 type LogImport = {
@@ -95,51 +94,12 @@ type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
 let marineInstance: Awaited<ReturnType<typeof init>> | 'not-set' | 'terminated' = 'not-set';
 
-const tryLoadFromUrl = async (baseUrl: string, url: string): Promise<WebAssembly.Module> => {
-    const fullUrl = baseUrl + '/' + url;
-    try {
-        return await WebAssembly.compileStreaming(fetch(fullUrl));
-    } catch (e) {
-        throw new Error(
-            `Failed to load ${fullUrl}. This usually means that the web server is not serving wasm files correctly. Original error: ${e.toString()}`,
-        );
-    }
-};
-
-const tryLoadFromFs = async (path: string): Promise<WebAssembly.Module> => {
-    try {
-        // webpack will complain about missing dependencies for web target
-        // to fix this we have to use eval('require')
-        const fs = eval('require')('fs');
-        const file = fs.readFileSync(path);
-        return await WebAssembly.compile(file);
-    } catch (e) {
-        throw new Error(`Failed to load ${path}. ${e.toString()}`);
-    }
-};
-
 const decoder = new TextDecoder();
 
 const toExpose: RunnerScriptInterface = {
-    init: async (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => {
-        let avmModule: WebAssembly.Module;
-        let marineModule: WebAssembly.Module;
-        if (isBrowser || isWebWorker) {
-            if (loadMethod.method !== 'fetch-from-url') {
-                throw new Error("Only 'fetch-from-url' is supported for browsers");
-            }
-            avmModule = await tryLoadFromUrl(loadMethod.baseUrl, loadMethod.filePaths.avm);
-            marineModule = await tryLoadFromUrl(loadMethod.baseUrl, loadMethod.filePaths.marine);
-        } else if (isNode) {
-            if (loadMethod.method !== 'read-from-fs') {
-                throw new Error("Only 'read-from-fs' is supported for nodejs");
-            }
-
-            avmModule = await tryLoadFromFs(loadMethod.filePaths.avm);
-            marineModule = await tryLoadFromFs(loadMethod.filePaths.marine);
-        } else {
-            throw new Error('Environment not supported');
-        }
+    init: async (config: Config, marine: SharedArrayBuffer, module: SharedArrayBuffer) => {
+        const marineModule = WebAssembly.compile(marine);
+        const avmModule = WebAssembly.compile(module);
 
         // wasi is needed to run AVM with marine-js
         const wasmFs = new WasmFs();
@@ -158,7 +118,7 @@ const toExpose: RunnerScriptInterface = {
 
         const avmInstance = await WebAssembly.instantiate(avmModule, {
             ...wasi.getImports(avmModule),
-            ...newImportObject(cfg)
+            ...newImportObject(cfg),
         });
         wasi.start(avmInstance);
         cfg.exports = avmInstance.exports;
@@ -173,7 +133,7 @@ const toExpose: RunnerScriptInterface = {
         try {
             result = JSON.parse(rawResult);
         } catch (ex) {
-            throw "register_module result parsing error: " + ex + ", original text: " + rawResult;
+            throw 'register_module result parsing error: ' + ex + ', original text: ' + rawResult;
         }
     },
 
@@ -227,11 +187,11 @@ const toExpose: RunnerScriptInterface = {
             try {
                 result = JSON.parse(rawResult);
             } catch (ex) {
-                throw "call_module result parsing error: " + ex + ", original text: " + rawResult;
+                throw 'call_module result parsing error: ' + ex + ', original text: ' + rawResult;
             }
 
-            if (result.error !== "") {
-                throw "call_module returned error: " + result.error;
+            if (result.error !== '') {
+                throw 'call_module returned error: ' + result.error;
             }
 
             result = result.result;

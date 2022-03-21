@@ -17,7 +17,7 @@
 import { AvmRunner, CallResultsArray, LogLevel, InterpreterResult } from '@fluencelabs/avm-runner-interface';
 import { isBrowser, isNode } from 'browser-or-node';
 import { Thread, ModuleThread, spawn, Worker } from 'threads';
-import { RunnerScriptInterface, wasmLoadingMethod } from './types';
+import { RunnerScriptInterface, Config, wasmLoadingMethod } from './types';
 export { wasmLoadingMethod } from './types';
 
 const defaultAvmFileName = 'avm.wasm';
@@ -26,6 +26,49 @@ const avmPackageName = '@fluencelabs/avm';
 const marinePackageName = '@fluencelabs/marine-js';
 const runnerScriptNodePath = './runnerScript.node.js';
 const runnerScriptWebPath = './runnerScript.web.js';
+
+const toSharedArrayBuffer = async (response: any): Promise<SharedArrayBuffer> => {
+    const parts = [];
+    let totalLength = 0;
+    for await (const buffer of response.body) {
+        parts.push(buffer);
+        totalLength += buffer.byteLength;
+    }
+    const sab = new SharedArrayBuffer(totalLength);
+    const u8 = new Uint8Array(sab);
+    let offset = 0;
+    for (const buffer of parts) {
+        u8.set(buffer, offset);
+        offset += buffer.byteLength;
+    }
+    return sab;
+};
+
+const tryLoadFromUrl = async (baseUrl: string, url: string): Promise<SharedArrayBuffer> => {
+    const fullUrl = baseUrl + '/' + url;
+    try {
+        return toSharedArrayBuffer(fetch(fullUrl));
+    } catch (e: any) {
+        throw new Error(
+            `Failed to load ${fullUrl}. This usually means that the web server is not serving wasm files correctly. Original error: ${e.toString()}`,
+        );
+    }
+};
+
+const tryLoadFromFs = async (path: string): Promise<SharedArrayBuffer> => {
+    try {
+        // webpack will complain about missing dependencies for web target
+        // to fix this we have to use eval('require')
+        const fsPromises = eval('require')('fs').promises;
+        const buf: Buffer = await fsPromises.readFile(path);
+        const sab = new SharedArrayBuffer(buf.length);
+        const u8 = new Uint8Array(sab);
+        u8.set(buf);
+        return sab;
+    } catch (e: any) {
+        throw new Error(`Failed to load ${path}. ${e.toString()}`);
+    }
+};
 
 export class AvmRunnerBackground implements AvmRunner {
     private _worker?: ModuleThread<RunnerScriptInterface>;
@@ -82,8 +125,19 @@ export class AvmRunnerBackground implements AvmRunner {
             throw new Error('Unknown environment');
         }
 
+        let marine: SharedArrayBuffer;
+        let avm: SharedArrayBuffer;
+        if (method.method === 'fetch-from-url') {
+            marine = await tryLoadFromUrl(method.baseUrl, method.filePaths.marine);
+            avm = await tryLoadFromUrl(method.baseUrl, method.filePaths.avm);
+        } else if (method.method === 'read-from-fs') {
+            marine = await tryLoadFromFs(method.filePaths.marine);
+            avm = await tryLoadFromFs(method.filePaths.avm);
+        } else {
+            throw new Error('Incorrect method: ' + JSON.stringify(method));
+        }
         this._worker = await spawn<RunnerScriptInterface>(new Worker(workerPath));
-        await this._worker.init(logLevel, method);
+        await this._worker.init({}, marine, avm);
     }
 
     async terminate(): Promise<void> {

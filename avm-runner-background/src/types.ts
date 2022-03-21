@@ -32,8 +32,10 @@ export type wasmLoadingMethod =
           filePaths: FilePaths;
       };
 
+export interface Config {}
+
 export type RunnerScriptInterface = {
-    init: (logLevel: LogLevel, loadMethod: wasmLoadingMethod) => Promise<void>;
+    init: (config: Config, marine: SharedArrayBuffer, module: SharedArrayBuffer) => Promise<any>;
     terminate: () => Promise<void>;
     run: (
         air: string,
