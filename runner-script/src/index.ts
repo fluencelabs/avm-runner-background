@@ -96,10 +96,10 @@ let marineInstance: Awaited<ReturnType<typeof init>> | 'not-set' | 'terminated' 
 
 const decoder = new TextDecoder();
 
-const toExpose: RunnerScriptInterface = {
+export const toExpose: RunnerScriptInterface = {
     init: async (config: Config, marine: SharedArrayBuffer, module: SharedArrayBuffer) => {
-        const marineModule = WebAssembly.compile(marine);
-        const avmModule = WebAssembly.compile(module);
+        const marineModule = await WebAssembly.compile(new Uint8Array(marine));
+        const avmModule = await WebAssembly.compile(new Uint8Array(module));
 
         // wasi is needed to run AVM with marine-js
         const wasmFs = new WasmFs();
@@ -255,4 +255,4 @@ const toExpose: RunnerScriptInterface = {
     },
 };
 
-expose(toExpose);
+// expose(toExpose);
