@@ -77,9 +77,9 @@ export interface FaaSWASIConfig {
 }
 
 export interface InitConfig {
+    serviceId: string;
     marine: SharedArrayBuffer;
     service: SharedArrayBuffer;
-    config: MarineConfig;
-    serviceId: string;
-    envs: Map<Uint8Array, Uint8Array>;
+    config?: MarineConfig;
+    envs?: Map<Uint8Array, Uint8Array>;
 }

@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "@fluencelabs/avm-runner-interface": "^0.2.0",
+        "browser-or-node": "^2.0.0",
         "threads": "^1.7.0"
     }
 }

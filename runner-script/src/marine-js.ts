@@ -96,10 +96,11 @@ type MarineInstance = Awaited<ReturnType<typeof init>> | 'not-set' | 'terminated
 const decoder = new TextDecoder();
 
 export class MarineJs {
-    private _marineInstance: MarineInstance = 'not-set';
-    private _serviceId: string;
+    // private _marineInstance: MarineInstance = 'not-set';
+    // private _serviceId: string = null;
 
     async init(config: InitConfig): Promise<void> {
+        // @ts-ignore
         this._serviceId = config.serviceId;
         const marineModule = await WebAssembly.compile(new Uint8Array(config.marine));
         const serviceModule = await WebAssembly.compile(new Uint8Array(config.service));
@@ -135,6 +136,7 @@ export class MarineJs {
         let result: any;
         try {
             result = JSON.parse(rawResult);
+            // @ts-ignore
             this._marineInstance = marineInstance;
         } catch (ex) {
             throw 'register_module result parsing error: ' + ex + ', original text: ' + rawResult;
@@ -142,18 +144,22 @@ export class MarineJs {
     }
 
     async terminate(): Promise<void> {
+        // @ts-ignore
         this._marineInstance = 'not-set';
     }
 
     async call(function_name: string, args: string, callParams: any): Promise<string> {
+        // @ts-ignore
         if (this._marineInstance === 'not-set') {
             throw new Error('Not initialized');
         }
 
+        // @ts-ignore
         if (this._marineInstance === 'terminated') {
             throw new Error('Terminated');
         }
 
+        // @ts-ignore
         return this._marineInstance.call_module(this._serviceId, function_name, args);
     }
 }
