@@ -15,11 +15,10 @@
  */
 
 import { CallResultsArray, InterpreterResult } from '@fluencelabs/avm-runner-interface';
-
-export interface Config {}
+import { InitConfig, MarineConfig } from './config';
 
 export type RunnerScriptInterface = {
-    init: (config: Config, marine: SharedArrayBuffer, module: SharedArrayBuffer) => Promise<any>;
+    init: (config: MarineConfig, marine: SharedArrayBuffer, module: SharedArrayBuffer) => Promise<any>;
     terminate: () => Promise<void>;
     run: (
         air: string,
@@ -31,4 +30,10 @@ export type RunnerScriptInterface = {
         },
         callResults: CallResultsArray,
     ) => Promise<InterpreterResult>;
+};
+
+export type MarineJsExpose = {
+    init: (config: InitConfig) => Promise<void>;
+    terminate: () => Promise<void>;
+    call: (function_name: string, args: string, callParams: any) => Promise<string>;
 };
